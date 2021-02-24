@@ -7,12 +7,12 @@
   tasks:
 
 ###### This task will only execute if you are in a DevNet Express event ######
-  - name: Mission Checkpoint
-    fail:
-      msg: "Please review hosts file and set variables webex_token and webex_room_name"
-    when:
-      - webex_token ==  "mytokenabcdef" or webex_room_id == "roomIDabc123456defghi789jklmnopqr0"
-      - inventory_hostname != "ios-xe-mgmt.cisco.com"
+  # - name: Mission Checkpoint
+  #   fail:
+  #     msg: "Please review hosts file and set variables webex_token and webex_room_name"
+  #   when:
+  #     - webex_token ==  "mytokenabcdef" or webex_room_id == "roomIDabc123456defghi789jklmnopqr0"
+  #     - inventory_hostname != "ios-xe-mgmt.cisco.com"
 
   - name: GATHERING FACTS
     ios_facts:
@@ -35,13 +35,13 @@
 # Uncomment and update this task to create 4 new Loopbacks numbered [loop_number][pod_number] such that if the loop number
 # is 50 and your pod number is 40, it would be loopback5040. Variable "loops" is already defined in group_vars/iosxe.yml
 #
-#  - name: Create loopback from "loops"
-#    ios_interface:
-#      name: MISSION
-#      enabled: True
-#      description: Pod Number {{item}}{{pod_number}}
-#    with_items: "{{loops}}"
-#    register: makeloop
+  - name: Create loopback from "loops"
+    ios_interface:
+      name: Loopback{{item}}{{pod_number}}
+      enabled: True
+      description: Pod Number {{item}}{{pod_number}}
+    with_items: "{{loops}}"
+    register: makeloop
 ######### END MISSION SECTION #########
 
   - name: Mission Checkpoint
@@ -53,12 +53,12 @@
 ######### MISSION TODO #########
 # Uncomment and update this task to assign unique IPs to each of the 4 new Loopbacks. You may use any method you like to
 # ensure uniqueness, but are encouraged to use the loop number and pod_number
-#  - name: Create and assign IP to loopback
-#    ios_l3_interface:
-#      name: MISSION
-#      ipv4: MISSION
-#    with_items: "{{loops}}"
-#    register: addip
+  - name: Assign IP to loopback
+    ios_l3_interface:
+      name: Loopback{{item}}{{pod_number}}
+      ipv4: 10.{{pod_number}}.{{item}}.1/32
+    with_items: "{{loops}}"
+    register: addip
 ######### END MISSION SECTION #########
 
   - name: Mission Checkpoint
@@ -66,14 +66,22 @@
       msg: "Please review 04-mission.yaml and add a task to add IPs to your new loopbacks"
     when: addip is undefined
 
+  - name: run show ip int brie
+    ios_command:
+      commands: show ip interface brief
+    register: myint
+
+  - name: display value of "myint" variable
+    debug:
+      var: myint["stdout_lines"][0]
 
 ######### MISSION TODO #########
 # Uncomment and update this task to create new VRFs using the "local_vrfs" variable already defined in group_vars/iosxe.yml
-#  - name: Create VRFs as defined by local_vrfs
-#    ios_vrf:
-#      vrfs: MISSION
-#      state: present
-#    register: addvrf
+  - name: Create VRFs as defined by local_vrfs
+    ios_vrf:
+      vrfs: "{{local_vrfs}}"
+      state: present
+    register: addvrf
 ######### END MISSION SECTION #########
 
   - name: Mission Checkpoint
@@ -90,14 +98,23 @@
     debug:
       var: myvrf2['stdout_lines'][0]
 
+  - name: run show ip int brie
+    ios_command:
+      commands: show ip interface brief
+    register: myint
+
+  - name: display value of "myint" variable
+    debug:
+      var: myint["stdout_lines"][0]
+
 ###### This task will only execute if you are in a DevNet Express event ######
-  - name: Send info to Webex Teams room
-    cisco_spark:
-      message: "Congrats! You finished the mission for Intro to Ansible! Current vrf table: \n{{myvrf2['stdout'][0]}}"
-      message_type: text
-      personal_token: "{{webex_token}}"
-      recipient_id: "{{webex_room_id}}"
-      recipient_type: roomId
-    when: inventory_hostname != "ios-xe-mgmt.cisco.com"
+  # - name: Send info to Webex Teams room
+  #   cisco_spark:
+  #     message: "Congrats! You finished the mission for Intro to Ansible! Current vrf table: \n{{myvrf2['stdout'][0]}}"
+  #     message_type: text
+  #     personal_token: "{{webex_token}}"
+  #     recipient_id: "{{webex_room_id}}"
+  #     recipient_type: roomId
+#    when: inventory_hostname != "ios-xe-mgmt.cisco.com"
 
 
