@@ -1,3 +1,7 @@
+## Connect to your DevNet Sandbox using your AnyConnect client
+
+The credentials were emailed to you after reserving a Recommended Code IOS XE sandbox on https://devnetsandbox.cisco.com/RM/Topology
+
 ## Clone the repo
 
 Run in terminal: 
